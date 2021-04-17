@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title></title>
+        <script src="js/campo-minado.js"></script>
+    </head>
+    <body>
+        <div id="exibir-execucao"></div>
+
+        <button onclick="start()">Start</button>
+
+        <script>
+            var campoMinado = new CampoMinado();
+            
+            
+            document.getElementById('exibir-execucao').innerHTML += '----------- Início do jogo -----------';
+            document.getElementById('exibir-execucao').innerHTML += '<pre>' + campoMinado.Tabuleiro() + '</pre>';
+            
+            // Realize sua codificação a partir deste ponto, boa sorte!
+
+            // Define o tamanho do tabuleiro, para localizar as bordas
+            const tamtabX = 9;
+            const tamtabY = 9;
+
+            const bomba = '*'
+
+            var campoMatriz = [];
+
+            var bombasX = [];
+            var bombasY = [];
+
+            //Primeira chamada à função para começar a resolução
+            // clique no botão Start
+            function start(){
+                verificaLados();
+            }
+
+            //Principal função, verifica os lados a procura de possíveis bombas
+            // e locais vazios sem possibilidade de haver bombas
+            function verificaLados() {
+                campoMatriz = atualizaTabuleiro();
+
+                for(let x = 0; x < tamtabX; x++){
+                    for(let y = 0; y < tamtabY; y++){
+                        if(campoMatriz[x][y] === bomba || campoMatriz[x][y] === '-' || campoMatriz[x][y] === '0') continue;
+                        
+                        let bombas = campoMatriz[x][y];
+
+                        let vazioX = [];
+                        let vazioY = [];
+
+                        let verificaX = [-1, 0, 1];
+                        let verificaY = [-1, 0, 1];
+
+                        //Verifica se a posição verificada está em uma borda
+                        if(x === 0){
+                            verificaX.shift();
+                        }
+                        if(x === tamtabX - 1){
+                            verificaX.pop();
+                        }
+                        if(y === 0){
+                            verificaY.shift();
+                        }
+                        if(y === tamtabY - 1){
+                            verificaY.pop();
+                        }
+
+                        //Procura casas vazias e assimila com a quantidade de bombas
+                        for(let vX = 0; vX < verificaX.length; vX++){
+                            for(let vY = 0; vY < verificaY.length; vY++){
+                                if(campoMatriz[x + verificaX[vX]][y + verificaY[vY]] === bomba){
+                                    bombas--;
+
+                                    continue
+                                }
+
+                                if(campoMatriz[x + verificaX[vX]][y + verificaY[vY]] === '-'){
+                                    vazioX.push(x + verificaX[vX]);
+                                    vazioY.push(y + verificaY[vY]);
+
+                                    continue
+                                }
+                                 
+                            }
+                        }
+
+                        //Marca os locais com certeza de bomba
+                        if(vazioX.length == bombas){
+                            for(let i = 0; i < vazioX.length; i++){
+                                bombasX.push(vazioX[i]);
+                                bombasY.push(vazioY[i]);
+
+                                campoMatriz[vazioX[i]][vazioY[i]] = bomba;
+
+                            }
+                        }
+
+                        //Solicita abertura de casas vazias
+                        if(bombas === 0 && vazioX.length > 0){     
+                            for(let i = 0; i < vazioX.length; i++){
+                                let x = vazioX[i] + 1;
+                                let y = vazioY[i] + 1;
+                                
+                                //Log para mostrar as casas abertas durante a execução
+                                console.log(x + ',' + y)
+
+                                campoMinado.Abrir(x, y)
+
+                                atualizaTabuleiro()
+                            }
+
+                            continue
+                        }
+
+                    }
+                }
+
+                //Verifica se todas as casas vazias foram abertas
+                // caso contrário, chama a própria função, para refazer as verificações
+                // com o tabuleiro atualizado
+                var status = campoMinado.JogoStatus();
+
+                if(status === 0){
+                    verificaLados();
+                }
+                
+                if(status === 1){
+                    document.querySelector('pre').innerHTML = campoMinado.Tabuleiro();
+                }
+                
+                if(status === 2){
+                    alert('Gamer over!')
+                }
+
+            }
+
+            //Atualiza o tabuleiro
+            function atualizaTabuleiro() {
+                let campoString = campoMinado.Tabuleiro().replace(/(\r\n|\n|\r)/gm, "")
+
+                for(let x = 0; x < tamtabX; x++){
+                    campoMatrizY = []
+                    for(let y = 0; y < tamtabY; y++){
+                        campoMatrizY[y] = campoString[y + (x * tamtabX)];
+                    }
+                    campoMatriz[x] = campoMatrizY;
+                }
+
+                campoMatriz = bombasEncontradas(campoMatriz);
+
+                return campoMatriz;
+            }
+
+            //Após atualizar, marca as bombas antes encontradas
+            function bombasEncontradas() {
+                for(let i = 0; i < bombasX.length; i++){
+                    campoMatriz[bombasX[i]][bombasY[i]] = bomba;
+                }
+
+                return campoMatriz;
+            }
+
+        </script>
+    </body>
+</html>
